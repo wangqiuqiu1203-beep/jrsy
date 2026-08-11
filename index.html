@@ -9,10 +9,10 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ffffff">
     <meta name="mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="star-icon.png">
-    <link rel="apple-touch-icon-precomposed" href="star-icon.png">
-    <link rel="apple-touch-icon" href="https://jrsy081113-hue.github.io/jrsy/star-icon.png">
-    <link rel="apple-touch-icon-precomposed" href="https://jrsy081113-hue.github.io/jrsy/star-icon.png">
+    <link rel="apple-touch-icon" href="icon-512.png">
+    <link rel="apple-touch-icon-precomposed" href="icon-512.png">
+    <link rel="apple-touch-icon" href="icon-512.png">
+    <link rel="apple-touch-icon-precomposed" href="icon-512.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Roboto+Mono:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
@@ -79591,51 +79591,64 @@ function applyPageTopOffset() {
     </script>
 <!-- ===== PWA 安装引导横幅 ===== -->
     <div id="installBar">
-        <span class="ib-icon">📱</span>
-        <span class="ib-text">安装到桌面，全屏体验</span>
+        <img class="ib-icon" src="icon-192.png" alt="jrsy">
+        <span class="ib-text"><b>jrsy</b><small>安装到桌面，全屏体验</small></span>
         <button id="installBtn">安装</button>
         <span id="installClose">✕</span>
     </div>
     <style>
         #installBar {
             position: fixed;
-            bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
             left: 50%;
-            transform: translateX(-50%) translateY(120px);
+            transform: translateX(-50%) translateY(140px);
             z-index: 999997;
             display: flex;
             align-items: center;
-            gap: 10px;
-            background: rgba(20, 20, 25, .92);
+            gap: 12px;
+            background: rgba(28, 24, 45, .88);
+            border: 1px solid rgba(255, 255, 255, .14);
             color: #fff;
-            padding: 10px 14px 10px 12px;
-            border-radius: 28px;
+            padding: 10px 12px 10px 10px;
+            border-radius: 30px;
             font-size: 14px;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            box-shadow: 0 6px 24px rgba(0, 0, 0, .4);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            box-shadow: 0 10px 32px rgba(80, 50, 200, .35);
             transition: transform .5s cubic-bezier(.2, .9, .3, 1.2);
             white-space: nowrap;
         }
         #installBar.show { transform: translateX(-50%) translateY(0); }
-        .ib-icon { font-size: 20px; }
+        .ib-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.3);
+            flex-shrink: 0;
+        }
+        .ib-text { display: flex; flex-direction: column; line-height: 1.25; }
+        .ib-text b { font-size: 14px; font-weight: 700; }
+        .ib-text small { font-size: 11px; color: rgba(255,255,255,.65); }
         #installBtn {
-            background: linear-gradient(135deg, #7c5cff, #a78bfa);
+            background: linear-gradient(135deg, #ff8f85, #ff6aad);
             color: #fff;
             border: none;
-            border-radius: 16px;
-            padding: 6px 16px;
+            border-radius: 18px;
+            padding: 8px 18px;
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
+            box-shadow: 0 4px 14px rgba(255, 106, 173, .4);
+            flex-shrink: 0;
         }
-        #installBtn:active { opacity: .8; }
+        #installBtn:active { opacity: .85; transform: scale(.96); }
         #installClose {
-            color: rgba(255,255,255,.6);
-            font-size: 16px;
-            padding: 2px 6px;
+            color: rgba(255,255,255,.55);
+            font-size: 15px;
+            padding: 4px 6px;
             cursor: pointer;
             line-height: 1;
+            flex-shrink: 0;
         }
         #installClose:active { color: #fff; }
     </style>
