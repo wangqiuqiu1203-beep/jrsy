@@ -78049,6 +78049,65 @@ function handleFullScreenClick() {
       <script src="cross-reality-plugin.js"></script> 
       <script src="multi-offline-plugin.js"></script>
       <script src="notebook-plugin.js"></script>
+<!-- ===== 全屏切换按钮 ===== -->
+    <button id="fsBtn" aria-label="全屏切换" title="全屏模式（iOS Safari 请添加到主屏幕使用）">⛶</button>
+    <style>
+        #fsBtn {
+            position: fixed;
+            top: calc(env(safe-area-inset-top, 0px) + 10px);
+            right: 10px;
+            z-index: 999999;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, .30);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, .25);
+            font-size: 15px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            transition: opacity .3s, background .3s;
+        }
+        #fsBtn:active { background: rgba(0, 0, 0, .55); }
+        #fsBtn.fs-on { opacity: .25; }
+        #fsBtn.fs-on:active { opacity: .9; }
+    </style>
+    <script>
+        (function () {
+            var b = document.getElementById('fsBtn');
+            function isFs() {
+                return document.fullscreenElement || document.webkitFullscreenElement ||
+                    document.mozFullScreenElement || document.msFullscreenElement;
+            }
+            function enter() {
+                var d = document.documentElement;
+                var fn = d.requestFullscreen || d.webkitRequestFullscreen ||
+                    d.mozRequestFullScreen || d.msRequestFullscreen;
+                fn && fn.call(d);
+            }
+            function exit() {
+                var fn = document.exitFullscreen || document.webkitExitFullscreen ||
+                    document.mozCancelFullScreen || document.msExitFullscreen;
+                fn && fn.call(document);
+            }
+            b.addEventListener('click', function () { isFs() ? exit() : enter(); });
+            function upd() {
+                var on = isFs();
+                b.classList.toggle('fs-on', on);
+                b.textContent = on ? '✕' : '⛶';
+            }
+            document.addEventListener('fullscreenchange', upd);
+            document.addEventListener('webkitfullscreenchange', upd);
+            document.addEventListener('mozfullscreenchange', upd);
+            document.addEventListener('MSFullscreenChange', upd);
+        })();
+    </script>
 </body>
 </html>
 
