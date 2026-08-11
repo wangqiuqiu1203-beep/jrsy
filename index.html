@@ -79674,22 +79674,42 @@ function applyPageTopOffset() {
             });
         })();
     </script>
-<!-- ===== 安卓全屏兜底（float/Eos 同款方案）：点击屏幕进入全屏，每次点击都尝试 ===== -->
+<!-- ===== 安卓全屏兜底增强版（float/Eos 同款 + 退出自动恢复）：点击/触摸进入全屏，退出后自动重新进入 ===== -->
     <script>
         (function () {
             var isMobile = window.matchMedia(
                 "(max-width: 500px) and (hover: none) and (pointer: coarse)"
             ).matches;
             if (!isMobile) return;
-            function tryFullscreen() {
+            var lastExit = 0;
+            function inFs() {
+                return !!(document.fullscreenElement || document.webkitFullscreenElement ||
+                    document.mozFullScreenElement || document.msFullscreenElement);
+            }
+            function enterFs() {
+                if (inFs()) return;
                 var doc = document.documentElement;
-                if (document.fullscreenElement || document.webkitFullscreenElement ||
-                    document.mozFullScreenElement || document.msFullscreenElement) return;
                 var fn = doc.requestFullscreen || doc.webkitRequestFullscreen ||
                     doc.mozRequestFullScreen || doc.msRequestFullscreen;
                 if (fn) { try { fn.call(doc); } catch (e) { } }
             }
-            document.addEventListener("click", tryFullscreen);
+            function onFsChange() {
+                var now = Date.now();
+                if (!inFs() && now - lastExit > 1500) {
+                    lastExit = now;
+                    setTimeout(enterFs, 250);
+                }
+            }
+            // 每次点击/触摸都尝试进入全屏（退出后可自动恢复）
+            document.addEventListener("click", enterFs);
+            document.addEventListener("pointerdown", enterFs);
+            // 监听全屏退出事件：自动重新进入，无需手动点击
+            document.addEventListener("fullscreenchange", onFsChange);
+            document.addEventListener("webkitfullscreenchange", onFsChange);
+            // 从后台切回时也自动恢复全屏
+            document.addEventListener("visibilitychange", function () {
+                if (!document.hidden) setTimeout(enterFs, 250);
+            });
         })();
     </script>
 </body>
