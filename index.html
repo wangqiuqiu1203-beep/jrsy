@@ -78057,6 +78057,78 @@ function handleFullScreenClick() {
             });
         }
     </script>
+<!-- ===== PWA 安装引导横幅（Chrome 判定可安装时显示） ===== -->
+    <div id="installBar">
+        <span class="ib-icon">📱</span>
+        <span class="ib-text">安装到桌面，全屏体验</span>
+        <button id="installBtn">安装</button>
+    </div>
+    <style>
+        #installBar {
+            position: fixed;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+            left: 50%;
+            transform: translateX(-50%) translateY(120px);
+            z-index: 999997;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(20, 20, 25, .92);
+            color: #fff;
+            padding: 10px 14px 10px 12px;
+            border-radius: 28px;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, .4);
+            transition: transform .5s cubic-bezier(.2, .9, .3, 1.2);
+            white-space: nowrap;
+        }
+        #installBar.show { transform: translateX(-50%) translateY(0); }
+        .ib-icon { font-size: 20px; }
+        #installBtn {
+            background: linear-gradient(135deg, #7c5cff, #a78bfa);
+            color: #fff;
+            border: none;
+            border-radius: 16px;
+            padding: 6px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        #installBtn:active { opacity: .8; }
+    </style>
+    <script>
+        (function () {
+            var bar = document.getElementById('installBar');
+            var btn = document.getElementById('installBtn');
+            var deferredPrompt = null;
+            var shown = false;
+            function show() {
+                if (shown) return;
+                shown = true;
+                bar.classList.add('show');
+                setTimeout(function () { bar.classList.remove('show'); }, 8000);
+            }
+            window.addEventListener('beforeinstallprompt', function (e) {
+                e.preventDefault();
+                deferredPrompt = e;
+                show();
+            });
+            btn.addEventListener('click', function () {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(function (r) {
+                    bar.classList.remove('show');
+                    deferredPrompt = null;
+                });
+            });
+            window.addEventListener('appinstalled', function () {
+                bar.classList.remove('show');
+                deferredPrompt = null;
+            });
+        })();
+    </script>
 <!-- ===== 自动全屏：点屏幕任意位置即全屏（浏览器安全要求必须有一次点击） ===== -->
     <div id="fsTip">点一下屏幕，进入全屏 ✨</div>
     <style>
