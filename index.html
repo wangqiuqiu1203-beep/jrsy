@@ -78129,78 +78129,23 @@ function handleFullScreenClick() {
             });
         })();
     </script>
-<!-- ===== 自动全屏：点屏幕任意位置即全屏（浏览器安全要求必须有一次点击） ===== -->
-    <div id="fsTip">点一下屏幕，进入全屏 ✨</div>
-    <style>
-        #fsTip {
-            position: fixed;
-            top: calc(env(safe-area-inset-top, 0px) + 14px);
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 999998;
-            background: rgba(0, 0, 0, .55);
-            color: #fff;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            letter-spacing: .5px;
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            opacity: 0;
-            transition: opacity .4s;
-            pointer-events: none;
-            white-space: nowrap;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, .3);
-        }
-        #fsTip.show { opacity: 1; }
-    </style>
+<!-- ===== 安卓全屏兜底（float/Eos 同款方案）：点击屏幕进入全屏，每次点击都尝试，退出后自动恢复 ===== -->
     <script>
         (function () {
-            var tip = document.getElementById('fsTip');
-            function isFs() {
-                return document.fullscreenElement || document.webkitFullscreenElement ||
-                    document.mozFullScreenElement || document.msFullscreenElement;
+            var isMobile = window.matchMedia(
+                "(max-width: 500px) and (hover: none) and (pointer: coarse)"
+            ).matches;
+            if (!isMobile) return;
+            function tryFullscreen() {
+                var doc = document.documentElement;
+                if (document.fullscreenElement || document.webkitFullscreenElement ||
+                    document.mozFullScreenElement || document.msFullscreenElement) return;
+                var fn = doc.requestFullscreen || doc.webkitRequestFullscreen ||
+                    doc.mozRequestFullScreen || doc.msRequestFullscreen;
+                if (fn) { try { fn.call(doc); } catch (e) { } }
             }
-            function enter() {
-                if (isFs()) return;
-                var d = document.documentElement;
-                var fn = d.requestFullscreen || d.webkitRequestFullscreen ||
-                    d.mozRequestFullScreen || d.msRequestFullscreen;
-                if (fn) { try { fn.call(d); } catch (e) {} }
-            }
-            function showTip() { tip.classList.add('show'); setTimeout(function () { tip.classList.remove('show'); }, 4000); }
-            function hideTip() { tip.classList.remove('show'); }
-            // 1) 加载后尝试自动全屏；被拦截则显示引导提示
-            var autoTried = false;
-            function tryAuto() {
-                if (autoTried) return;
-                autoTried = true;
-                enter();
-                setTimeout(function () { if (!isFs()) showTip(); }, 700);
-            }
-            tryAuto();
-            // 2) 首次点击/触摸屏幕任意位置即全屏（无需按钮，不拦截页面操作）
-            var armed = true;
-            function onFirstTouch() {
-                if (!armed) return;
-                armed = false;
-                hideTip();
-                enter();
-            }
-            document.addEventListener('touchstart', onFirstTouch, { once: true, passive: true });
-            document.addEventListener('click', onFirstTouch, { once: true, passive: true });
-            // 3) 意外退出全屏后，下次点击自动恢复，并再次提示
-            function rearm() {
-                if (isFs()) { hideTip(); return; }
-                armed = true;
-                document.addEventListener('touchstart', onFirstTouch, { once: true, passive: true });
-                document.addEventListener('click', onFirstTouch, { once: true, passive: true });
-                setTimeout(showTip, 1500);
-            }
-            document.addEventListener('fullscreenchange', rearm);
-            document.addEventListener('webkitfullscreenchange', rearm);
-            document.addEventListener('mozfullscreenchange', rearm);
-            document.addEventListener('MSFullscreenChange', rearm);
+            // 每次点击都尝试进入全屏（退出后可重新进入）
+            document.addEventListener("click", tryFullscreen);
         })();
     </script>
 </body>

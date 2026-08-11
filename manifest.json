@@ -2,7 +2,7 @@
   "name": "jrsy",
   "short_name": "jrsy",
   "start_url": "./",
-  "display": "fullscreen",
+  "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "icons": [
@@ -19,5 +19,17 @@
       "purpose": "any"
     }
   ],
-  "id": "jrsy"
+  "id": "./",
+  "description": "jrsy - AI Virtual Phone",
+  "scope": "./",
+  "display_override": [
+    "fullscreen",
+    "standalone"
+  ],
+  "orientation": "portrait",
+  "categories": [
+    "entertainment",
+    "social",
+    "productivity"
+  ]
 }
