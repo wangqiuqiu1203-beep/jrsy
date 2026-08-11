@@ -79688,34 +79688,8 @@ function applyPageTopOffset() {
             });
         })();
     </script>
-<!-- ===== 安卓全屏兜底增强版（float/Eos 同款 + 退出自动恢复）：点击/触摸进入全屏，退出后自动重新进入 ===== -->
-    <script>
-(function () {
-var isMobile = window.matchMedia("(max-width: 500px) and (hover: none) and (pointer: coarse)").matches;
-if (!isMobile) return;
+<!-- ===== 全屏已移除：恢复系统状态栏 ===== -->
 
-// ★ 终极CSS注入：模拟APK StatusBar.overlaysWebView
-var style = document.createElement('style');
-style.textContent = [
-  'html, body { margin:0!important; padding:0!important; padding-top:0!important; background:#f7f7f7!important; min-height:100vh; }',
-  '.sim-phone-frame { margin-top:0!important; padding-top:calc(10px + env(safe-area-inset-top,0px))!important; }',
-  '.phone { padding-top:0!important; }',
-  'body::before { content:""; display:block; height:env(safe-area-inset-top,0px); background:#f7f7f7; position:fixed; top:0; left:0; right:0; z-index:99999; }'
-].join('\n');
-document.head.appendChild(style);
-
-var lastExit = 0;
-function inFs(){ return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement); }
-function enterFs(){ if(inFs()) return; var d=document.documentElement; var f=d.requestFullscreen||d.webkitRequestFullscreen||d.mozRequestFullScreen||d.msRequestFullscreen; if(f) try{f.call(d)}catch(e){} }
-function onFsChange(){ var now=Date.now(); if(!inFs() && now-lastExit>1500){ lastExit=now; setTimeout(enterFs,250); } }
-document.addEventListener("click", enterFs);
-document.addEventListener("pointerdown", enterFs);
-document.addEventListener("fullscreenchange", onFsChange);
-document.addEventListener("webkitfullscreenchange", onFsChange);
-document.addEventListener("visibilitychange", function(){ if(!document.hidden) setTimeout(enterFs,250); });
-setTimeout(enterFs, 600);
-})();
-</script>
 </body>
 </html>
 

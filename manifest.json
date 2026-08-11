@@ -22,10 +22,6 @@
   "id": "/",
   "description": "jrsy - AI Virtual Phone",
   "scope": "/",
-  "display_override": [
-    "fullscreen",
-    "standalone"
-  ],
   "orientation": "portrait",
   "categories": [
     "entertainment",
