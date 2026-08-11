@@ -78049,6 +78049,14 @@ function handleFullScreenClick() {
       <script src="cross-reality-plugin.js"></script> 
       <script src="multi-offline-plugin.js"></script>
       <script src="notebook-plugin.js"></script>
+<!-- ===== Service Worker 注册（PWA 安装必要条件） ===== -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js').catch(function () {});
+            });
+        }
+    </script>
 <!-- ===== 自动全屏：点屏幕任意位置即全屏（浏览器安全要求必须有一次点击） ===== -->
     <div id="fsTip">点一下屏幕，进入全屏 ✨</div>
     <style>
