@@ -78062,6 +78062,7 @@ function handleFullScreenClick() {
         <span class="ib-icon">📱</span>
         <span class="ib-text">安装到桌面，全屏体验</span>
         <button id="installBtn">安装</button>
+        <span id="installClose">✕</span>
     </div>
     <style>
         #installBar {
@@ -78097,6 +78098,14 @@ function handleFullScreenClick() {
             cursor: pointer;
         }
         #installBtn:active { opacity: .8; }
+        #installClose {
+            color: rgba(255,255,255,.6);
+            font-size: 16px;
+            padding: 2px 6px;
+            cursor: pointer;
+            line-height: 1;
+        }
+        #installClose:active { color: #fff; }
     </style>
     <script>
         (function () {
@@ -78108,8 +78117,12 @@ function handleFullScreenClick() {
                 if (shown) return;
                 shown = true;
                 bar.classList.add('show');
-                setTimeout(function () { bar.classList.remove('show'); }, 8000);
             }
+            var closeBtn = document.getElementById('installClose');
+            closeBtn.addEventListener('click', function () {
+                bar.classList.remove('show');
+                shown = true;
+            });
             window.addEventListener('beforeinstallprompt', function (e) {
                 e.preventDefault();
                 deferredPrompt = e;
