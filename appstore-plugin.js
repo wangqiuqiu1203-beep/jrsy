@@ -374,7 +374,7 @@
             <div class="as-run-back-btn" onclick="asCloseApp()">
                 <i class="ri-arrow-left-s-line"></i>
             </div>
-            <iframe id="asAppIframe" class="as-iframe"></iframe>
+            <iframe id="asAppIframe" class="as-iframe" sandbox="allow-scripts"></iframe>
         </div>
     `;
     document.querySelector('.phone').insertAdjacentHTML('beforeend', htmlTemplate);
@@ -540,13 +540,26 @@
         }
     }
 
+    // ========== [安全] 本地占位图（不请求第三方） ==========
+    function asPlaceholder(name) {
+        try {
+            var c = document.createElement('canvas'); c.width = 150; c.height = 150;
+            var x = c.getContext('2d');
+            x.fillStyle = '#1a1a1a'; x.fillRect(0, 0, 150, 150);
+            x.fillStyle = '#ffffff'; x.font = 'bold 64px sans-serif';
+            x.textAlign = 'center'; x.textBaseline = 'middle';
+            x.fillText(String(name || '?').charAt(0).toUpperCase(), 75, 82);
+            return c.toDataURL('image/png');
+        } catch (e) { return 'data:image/gif;base64,R0lGODlhAQABAAAAACw='; }
+    }
+
     // ==========================================
     // 渲染我的
     // ==========================================
     function asRenderMe() {
         const avatarEl = document.getElementById('asMyAvatar');
         avatarEl.src = asProfile.avatar ||
-            `https://via.placeholder.com/150/000000/ffffff?text=${encodeURIComponent((asProfile.name||'?').charAt(0))}`;
+            asPlaceholder(name);
         document.getElementById('asMyName').textContent = asProfile.name;
         const grid = document.getElementById('asMyAppsGrid');
         if (!myApps.length) {
@@ -694,7 +707,7 @@
         document.getElementById('asPubDesc').value = '';
         document.getElementById('asPubCode').value = '';
         tempIcon = '';
-        document.getElementById('asPubIconPreview').src = 'https://via.placeholder.com/150/f0f0f0/cccccc?text=ICON';
+        document.getElementById('asPubIconPreview').src = asPlaceholder('ICON');
         const btn = document.getElementById('asSubmitBtn');
         if (btn) { btn.disabled = false; btn.textContent = '发布到云端'; }
     };
@@ -757,7 +770,7 @@
             }
             const newApp = await CloudDB.publishApp({
                 name, desc, code,
-                icon: tempIcon || `https://via.placeholder.com/150/000000/ffffff?text=${encodeURIComponent(name.charAt(0))}`,
+                icon: tempIcon || asPlaceholder(name),
                 author: asProfile.name
             });
             myApps.push({ id: newApp.id, name: newApp.name, icon: newApp.icon, author: newApp.author, code: newApp.code });
@@ -777,6 +790,38 @@
 
     // ==========================================
     // 运行应用
+    // ========== [安全] 应用商店 iframe 白名单通信 ==========
+    // 沙箱 iframe 无法访问父页面；仅通过 postMessage 暴露白名单方法
+    window.addEventListener('message', function (e) {
+        var d = e.data;
+        if (!d || d.t !== 'JRSY_API') return;
+        var respond = function (r) { try { e.source.postMessage({ t: 'JRSY_API_RES', id: d.id, r: r }, '*'); } catch (_) {} };
+        try {
+            if (d.m === 'getFriends') {
+                respond(window.friends || []);
+            } else if (d.m === 'getChatHistories') {
+                respond(window.chatHistories || {});
+            } else if (d.m === 'askAI') {
+                // API Key 永不下发 iframe：由父页面代为请求
+                (async function () {
+                    try {
+                        var s = (window.dbManager && await window.dbManager.get('apiSettings', 'settings')) || {};
+                        if (!s.apiUrl || !s.apiKey || !s.modelName) return respond({ error: '未配置 API' });
+                        var r = await fetch(s.apiUrl.replace(/\/$/, '') + '/chat/completions', {
+                            method: 'POST',
+                            headers: { 'Authorization': 'Bearer ' + s.apiKey, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ model: s.modelName, messages: d.a || [] })
+                        });
+                        var data = await r.json();
+                        respond({ content: (data.choices && data.choices[0] && data.choices[0].message) ? data.choices[0].message.content : '' });
+                    } catch (err) { respond({ error: String(err && err.message || err) }); }
+                })();
+            } else {
+                respond({ error: 'method not allowed' });
+            }
+        } catch (err) { respond({ error: 'handler error' }); }
+    });
+
     // ==========================================
     window.asRunApp = function(appId) {
         const app = myApps.find(a => a.id === appId);
@@ -784,7 +829,11 @@
         const runContainer = document.getElementById('asRunContainer');
         const iframe       = document.getElementById('asAppIframe');
         runContainer.style.display = 'flex';
-        const bridge = `<script>window.JRSY_API={getFriends:async()=>window.parent.friends||[],getChatHistories:async()=>window.parent.chatHistories||{},getApiSettings:async()=>{if(window.parent.dbManager)return await window.parent.dbManager.get('apiSettings','settings')||{};return {};}}<\/script>`;
+        const bridge = `<script>
+var _jrsyQ={};
+function _jrsyCall(m,a){return new Promise(function(res){var id='__jrsy_'+Math.random().toString(36).slice(2);_jrsyQ[id]=res;try{window.parent.postMessage({t:'JRSY_API',id:id,m:m,a:a||[]},'*')}catch(e){res({error:'bridge'})}});}
+window.addEventListener('message',function(e){var d=e.data;if(d&&d.t==='JRSY_API_RES'&&_jrsyQ[d.id]){_jrsyQ[d.id](d.r);delete _jrsyQ[d.id]}});
+window.JRSY_API={getFriends:function(){return _jrsyCall('getFriends')},getChatHistories:function(){return _jrsyCall('getChatHistories')},askAI:function(messages){return _jrsyCall('askAI',[messages])}};<\/script>`;
         iframe.srcdoc = bridge + app.code;
     };
 
@@ -814,37 +863,20 @@
   <p id="output" style="padding:15px;background:#f9f9f9;border-radius:8px;">等待操作...</p>
 </div>
 <script>
-async function fetchData() {
-  return new Promise(resolve => {
-    const req = indexedDB.open('JRSY_DB_V2');
-    req.onsuccess = e => {
-      const db = e.target.result;
-      const tx = db.transaction(['friends','apiSettings'],'readonly');
-      let d = {friends:[],api:{}};
-      tx.objectStore('friends').getAll().onsuccess = r => d.friends = r.target.result||[];
-      tx.objectStore('apiSettings').get('settings').onsuccess = r => d.api = r.target.result||{};
-      tx.oncomplete = () => resolve(d);
-    };
-  });
-}
-let sys;
+let friends = [];
 window.onload = async () => {
-  sys = await fetchData();
+  try { friends = await window.JRSY_API.getFriends(); } catch(e) {}
   const sel = document.getElementById('charSelect');
-  sel.innerHTML = sys.friends.filter(f=>!f.isGroup).map(f=>\`<option value="\${f.id}">\${f.remark||f.name}</option>\`).join('');
+  sel.innerHTML = (friends||[]).filter(f=>!f.isGroup).map(f=>\`<option value="\${f.id}">\${f.remark||f.name}</option>\`).join('') || '<option>暂无好友</option>';
 };
 async function sayHello() {
-  const f = sys.friends.find(f=>f.id===document.getElementById('charSelect').value);
+  const f = (friends||[]).find(f=>f.id===document.getElementById('charSelect').value);
   const out = document.getElementById('output');
+  if (!f) { out.innerText='请选择好友'; return; }
   out.innerText = 'AI 思考中...';
   try {
-    const r = await fetch(\`\${sys.api.apiUrl}/chat/completions\`,{
-      method:'POST',
-      headers:{'Authorization':\`Bearer \${sys.api.apiKey}\`,'Content-Type':'application/json'},
-      body:JSON.stringify({model:sys.api.modelName,messages:[{role:'user',content:\`你叫"\${f.name}"，人设：\${f.role}。向我打个招呼（30字内）。\`}]})
-    });
-    const data = await r.json();
-    out.innerHTML = \`<b>\${f.name}</b>：\${data.choices[0].message.content}\`;
+    const r = await window.JRSY_API.askAI([{role:'user',content:\`你叫"\${f.name}"，人设：\${f.role}。向我打个招呼（30字内）。\`}]);
+    out.innerHTML = r.content ? \`<b>\${f.name}</b>：\${r.content}\` : ('失败:'+(r.error||'未知错误'));
   } catch(e){ out.innerText='失败:'+e.message; }
 }
 </script >
@@ -876,7 +908,11 @@ async function sayHello() {
         const runContainer = document.getElementById('asRunContainer');
         const iframe       = document.getElementById('asAppIframe');
         runContainer.style.display = 'flex';
-        const bridge = `<script>window.JRSY_API={getFriends:async()=>window.parent.friends||[],getChatHistories:async()=>window.parent.chatHistories||{},getApiSettings:async()=>{if(window.parent.dbManager)return await window.parent.dbManager.get('apiSettings','settings')||{};return {};}}<\/script>`;
+        const bridge = `<script>
+var _jrsyQ={};
+function _jrsyCall(m,a){return new Promise(function(res){var id='__jrsy_'+Math.random().toString(36).slice(2);_jrsyQ[id]=res;try{window.parent.postMessage({t:'JRSY_API',id:id,m:m,a:a||[]},'*')}catch(e){res({error:'bridge'})}});}
+window.addEventListener('message',function(e){var d=e.data;if(d&&d.t==='JRSY_API_RES'&&_jrsyQ[d.id]){_jrsyQ[d.id](d.r);delete _jrsyQ[d.id]}});
+window.JRSY_API={getFriends:function(){return _jrsyCall('getFriends')},getChatHistories:function(){return _jrsyCall('getChatHistories')},askAI:function(messages){return _jrsyCall('askAI',[messages])}};<\/script>`;
         iframe.srcdoc = bridge + code;
     };
 
