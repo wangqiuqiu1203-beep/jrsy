@@ -1,27 +1,27 @@
 {
   "name": "jrsy",
   "short_name": "jrsy",
-  "start_url": "./",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "star-icon.png",
+      "src": "/star-icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     }
   ],
-  "id": "./",
+  "id": "/",
   "description": "jrsy - AI Virtual Phone",
-  "scope": "./",
+  "scope": "/",
   "display_override": [
     "fullscreen",
     "standalone"
