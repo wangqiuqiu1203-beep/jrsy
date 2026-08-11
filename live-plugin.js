@@ -253,7 +253,7 @@ function _injectLiveCSS() {
 /* 1. 顶部栏容器 */
 .live-top-tabs {
     position: absolute;
-    top: 0;
+    top: calc(30px + var(--nav-bar-extra-offset, 0px));
     left: 0;
     width: 100%;
     height: 50px;
@@ -263,6 +263,14 @@ function _injectLiveCSS() {
     z-index: 100;
     background-color: #121212;
     border-bottom: 1px solid #222;
+}
+.live-top-tabs::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 100%;
+    height: calc(30px + var(--nav-bar-extra-offset, 0px));
+    background-color: inherit;
 }
 
 /* 2. 左侧按钮 (设置) */
@@ -330,7 +338,7 @@ function _injectLiveCSS() {
 .live-room-header {
     position: absolute;
     /* 适配刘海屏，距离顶部有一点距离 */
-    top: calc(8px + env(safe-area-inset-top)); 
+    top: calc(8px + env(safe-area-inset-top) + var(--nav-bar-extra-offset, 0px));
     left: 10px;
     right: 10px;
     z-index: 20;
@@ -1039,7 +1047,7 @@ function _injectLiveHTML() {
     <!-- ▲▲▲ 修改结束 ▲▲▲ -->
 
     <!-- 中间内容区域 -->
-    <div class="wechat-content" style="padding-top: 50px; background: #121212; padding-bottom: calc(70px + env(safe-area-inset-bottom)); overflow-y: auto;">
+    <div class="wechat-content" style="padding-top: calc(80px + var(--nav-bar-extra-offset, 0px)); background: #121212; padding-bottom: calc(70px + env(safe-area-inset-bottom)); overflow-y: auto;">
         
         <!-- 首页视图 -->
         <div id="liveHomeView">
@@ -1537,9 +1545,9 @@ function _injectLiveHTML() {
             </div>
             
             <!-- 2. 独立的退出按钮 (变成一个半透明小圆圈) -->
-            <button class="live-close-btn" onclick="event.stopPropagation(); quitMyLiveRoom()" style="background: rgba(0, 0, 0, 0.4); height: 38px; width: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; padding: 0; margin: 0; backdrop-filter: blur(5px);">
-                <i class="ri-close-line" style="color:#fff; font-size:22px; font-weight:bold;"></i>
-            </button>
+<button class="live-close-btn" onclick="quitMyLiveRoom()" style="background: rgba(0, 0, 0, 0.4); height: 38px; width: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; padding: 0; margin: 0; backdrop-filter: blur(5px);">
+    <i class="ri-close-line" style="color:#fff; font-size:22px; font-weight:bold;"></i>
+</button>
         </div>
     </div>
 
@@ -3702,7 +3710,7 @@ const liveGifts = [
     { id: 'lg_7', name: '浪漫马车', price: 299, img: 'https://cdn-icons-png.flaticon.com/512/784/784131.png' },
     { id: 'lg_8', name: '保时捷', price: 500, img: 'https://saas.chatbot.cn/download/minio/standard/2025-11-24/b3c3e153231c4d438d00eb695ed38cfa.png' },
     { id: 'lg_9', name: '绚烂烟花', price: 999, img: 'https://saas.chatbot.cn/download/minio/standard/2025-11-24/624e810b8c75443c8bc3a7c23571b2c5.png' },
-    { id: 'lg_10', name: '梦幻城堡', price: 2000, img: 'https://cdn-icons-png.flaticon.com/512/1415/1415715.png' },
+    { id: 'lg_10', name: '梦幻城堡', price: 2000, img: 'https://api.iconify.design/fluent-emoji/castle.svg' },
     { id: 'lg_11', name: '抖音一号', price: 5000, img: 'https://cdn-icons-png.flaticon.com/512/860/860368.png' },
     { id: 'lg_12', name: '嘉年华', price: 9999, img: 'https://cdncs.ykt.cbern.com.cn/v0.1/download?path=/zxx_feedback/qdqqd/1763973058417.png' }
 ];
@@ -4505,13 +4513,12 @@ function startMyLiveRoom() {
 
 // 3. 退出直播间
 function quitMyLiveRoom() {
-    showConfirm('确定要下播吗？', (yes) => {
-        if (yes) {
-            myLiveState.isActive = false;
-            setActivePage('liveApp');
-            applyStatusBarVisibility(); // 恢复状态栏
-        }
-    });
+    // 使用浏览器原生的 confirm，无视所有图层遮挡，绝对置顶
+    if (confirm('确定要下播吗？')) {
+        myLiveState.isActive = false;
+        setActivePage('liveApp');
+        applyStatusBarVisibility(); // 恢复状态栏
+    }
 }
 
 // 4. 推进剧情 (调用 AI - V2 深度记忆+角色融合版)
