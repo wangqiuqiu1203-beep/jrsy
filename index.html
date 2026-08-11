@@ -78049,63 +78049,42 @@ function handleFullScreenClick() {
       <script src="cross-reality-plugin.js"></script> 
       <script src="multi-offline-plugin.js"></script>
       <script src="notebook-plugin.js"></script>
-<!-- ===== 全屏切换按钮 ===== -->
-    <button id="fsBtn" aria-label="全屏切换" title="全屏模式（iOS Safari 请添加到主屏幕使用）">⛶</button>
-    <style>
-        #fsBtn {
-            position: fixed;
-            top: calc(env(safe-area-inset-top, 0px) + 10px);
-            right: 10px;
-            z-index: 999999;
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, .30);
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, .25);
-            font-size: 15px;
-            line-height: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            padding: 0;
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            transition: opacity .3s, background .3s;
-        }
-        #fsBtn:active { background: rgba(0, 0, 0, .55); }
-        #fsBtn.fs-on { opacity: .25; }
-        #fsBtn.fs-on:active { opacity: .9; }
-    </style>
+<!-- ===== 自动全屏（无按钮，点屏幕任意位置即全屏） ===== -->
     <script>
         (function () {
-            var b = document.getElementById('fsBtn');
             function isFs() {
                 return document.fullscreenElement || document.webkitFullscreenElement ||
                     document.mozFullScreenElement || document.msFullscreenElement;
             }
             function enter() {
+                if (isFs()) return;
                 var d = document.documentElement;
                 var fn = d.requestFullscreen || d.webkitRequestFullscreen ||
                     d.mozRequestFullScreen || d.msRequestFullscreen;
-                fn && fn.call(d);
+                if (fn) { try { fn.call(d); } catch (e) {} }
             }
-            function exit() {
-                var fn = document.exitFullscreen || document.webkitExitFullscreen ||
-                    document.mozCancelFullScreen || document.msExitFullscreen;
-                fn && fn.call(document);
+            // 1) 页面加载后先尝试直接全屏（支持的环境自动生效）
+            try { enter(); } catch (e) {}
+            // 2) 若被浏览器拦截：首次点击/触摸屏幕任意位置即全屏（无需按钮）
+            var armed = true;
+            function onFirstTouch() {
+                if (!armed) return;
+                armed = false;
+                enter();
             }
-            b.addEventListener('click', function () { isFs() ? exit() : enter(); });
-            function upd() {
-                var on = isFs();
-                b.classList.toggle('fs-on', on);
-                b.textContent = on ? '✕' : '⛶';
+            document.addEventListener('touchstart', onFirstTouch, { once: true, passive: true });
+            document.addEventListener('click', onFirstTouch, { once: true, passive: true });
+            // 3) 意外退出全屏后，下次点击自动恢复全屏
+            function rearm() {
+                if (isFs()) return;
+                armed = true;
+                document.addEventListener('touchstart', onFirstTouch, { once: true, passive: true });
+                document.addEventListener('click', onFirstTouch, { once: true, passive: true });
             }
-            document.addEventListener('fullscreenchange', upd);
-            document.addEventListener('webkitfullscreenchange', upd);
-            document.addEventListener('mozfullscreenchange', upd);
-            document.addEventListener('MSFullscreenChange', upd);
+            document.addEventListener('fullscreenchange', rearm);
+            document.addEventListener('webkitfullscreenchange', rearm);
+            document.addEventListener('mozfullscreenchange', rearm);
+            document.addEventListener('MSFullscreenChange', rearm);
         })();
     </script>
 </body>
